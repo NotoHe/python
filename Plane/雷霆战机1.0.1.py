@@ -112,6 +112,7 @@ def main():
 		key_control(hero)
 		#更新显示内容
 		pygame.display.update()
+		#优化一下性能，减少cpu负担
 		time.sleep(0.02)
 
 if __name__ == '__main__':
