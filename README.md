@@ -1,2 +1,1 @@
-# python
-python练习
+学习python过程中的一些练习
