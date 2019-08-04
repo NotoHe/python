@@ -15,11 +15,19 @@ class BasePlane(object):
 		self.image = pygame.image.load(image)  #飞机图片
 		self.bullet_list = []  #保存子弹
 		self.bullet_over_list =[] #保存越界的子弹
+		self.planeName = None  #保存击中的飞机对象
+
+		#被击中后使用的属性
+		self.hit = False  #是否被击中，默认False
+		self.image_num = 0  #图片显示计数
+		self.boom_image_list = [] #飞机爆炸图片的列表
+		self.image_index =0  #当前爆照图片的序号
+		self.crate_boom_image()
 
 	#显示飞机和子弹
 	def display(self):
 		#显示飞机
-		self.screen.blit(self.image,(self.x,self.y))  #显示主角飞机
+		self.screen.blit(self.image,(self.x,self.y))  #显示飞机
 		
 		#删除越界子弹
 		if len(self.bullet_over_list) > 0: 
@@ -59,11 +67,6 @@ class BasePlane(object):
 	def move_down(self):
 		self.y+=5
 
-	#开火
-	def fire(self):
-		print("开火")
-		#添加子弹列表
-		self.bullet_list.append(Bullet(self.screen,self.x,self.y))
 
 #子弹基类
 class BaseBullet(object):
@@ -84,6 +87,52 @@ class HeroPlane(BasePlane):
 	def __init__(self,screen_tem):
 		BasePlane.__init__(self,screen_tem,200,600,"./images/hero/hero.png")		
 
+	def __str__(self):
+		print("这是主角飞机")
+
+	def crate_boom_image(self):
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down1.png"))
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down2.png"))
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down4.png"))
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down6.png"))
+
+	def display(self):
+		#显示飞机
+		if self.hit == True:
+			print("被敌人子弹击中，游戏结束")			
+			self.screen.blit(self.boom_image_list[self.image_index],(self.x,self.y))  #显示主角飞机
+			self.image_num +=1
+			if self.image_num >=15:
+				self.image_num =0
+				self.image_index +=1
+			if self.image_index >3:
+				time.sleep(1)
+				exit()
+		else:
+			self.screen.blit(self.image,(self.x,self.y))  #显示主角飞机
+		
+		#删除越界子弹
+		if len(self.bullet_over_list) > 0: 
+			for over_bullet in self.bullet_over_list:  
+				self.bullet_list.remove(over_bullet)
+
+		self.bullet_over_list.clear()  #清空越界子弹列表
+		
+		for bullet in self.bullet_list:
+			bullet.display()  #显示子弹
+			#bullet.y -=10
+			bullet.move()  #子弹移动
+			if bullet.judge():  #判断子弹移动后是否越界
+				self.bullet_over_list.append(bullet)  #添加到子弹越界列表
+			#判断是否击中敌机
+			if (bullet.x in range(self.planeName.x,self.planeName.x+102)) and (bullet.y in range(self.planeName.y,self.planeName.y+80)):
+				self.planeName.hit = True  #更改为击中
+	#开火
+	def fire(self,planeName):
+		self.planeName = planeName
+		print("开火")
+		#添加子弹列表
+		self.bullet_list.append(Bullet(self.screen,self.x,self.y))
 
 #敌机
 class EnemyPlane(BasePlane):
@@ -92,6 +141,50 @@ class EnemyPlane(BasePlane):
 		BasePlane.__init__(self,screen_tem,0,0,"./images/enemy/enemy.png")
 
 		self.flag = 0  #左右移动方向标记，0向右移动，1向左移动
+
+	def __str__(self):
+		print("这是敌人飞机")
+
+	def crate_boom_image(self):
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down1.png"))
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down2.png"))
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down4.png"))
+		self.boom_image_list.append(pygame.image.load("./images/boom/boss_down6.png"))
+
+	def display(self):
+		#被击中，显示爆炸图
+		if self.hit == True:
+			print("被玩家子弹击中，游戏结束")
+			self.screen.blit(self.boom_image_list[self.image_index],(self.x,self.y))  #显示主角飞机
+			self.image_num +=1
+			if self.image_num >=15:
+				self.image_num =0
+				self.image_index +=1
+			if self.image_index >3:
+				time.sleep(3)
+				exit()
+		#未被击中，正常显示飞机
+		else:
+			self.screen.blit(self.image,(self.x,self.y))  #显示敌人飞机
+		
+		#删除越界子弹
+		if len(self.bullet_over_list) > 0: 
+			for over_bullet in self.bullet_over_list:  
+				self.bullet_list.remove(over_bullet)
+
+		self.bullet_over_list.clear()  #清空越界子弹列表
+		
+		for bullet in self.bullet_list:
+			bullet.display()  #显示子弹
+			#bullet.y -=10
+			bullet.move()  #子弹移动
+			if bullet.judge():  #判断子弹移动后是否越界
+				self.bullet_over_list.append(bullet)  #添加到子弹越界列表
+			#判断是否击中敌机
+			if (bullet.x in range(self.planeName.x,self.planeName.x+102)) and (bullet.y in range(self.planeName.y,self.planeName.y+66)):
+				print("打中玩家了")
+				self.planeName.hit = True  #更改为击中
+
 
 	#移动模式
 	def move_mode(self):
@@ -107,11 +200,15 @@ class EnemyPlane(BasePlane):
 		#self.y += 1	
 
 	#开火
-	def fire(self):		
+	def fire(self,planeName):
+		#print("敌机开火前")
+		#print(self.planeName)
+		self.planeName = planeName		
 		#控制子弹频率
 		random_num = random.randint(1,50)
 		if random_num ==1 or random_num ==10:
-			print("敌机开火")
+			print("敌机开火了")
+			#print(self.planeName)
 			self.bullet_list.append(EnemyBullet(self.screen,self.x,self.y))
 
 
@@ -144,7 +241,7 @@ class EnemyBullet(BaseBullet):
 		else:
 			return False
 
-def key_control(hero_tem):
+def key_control(hero_tem,enemy_tem):
 	#获取操作时间
 	for event in pygame.event.get():
 		#检测是不是点击了关闭按钮
@@ -178,7 +275,7 @@ def key_control(hero_tem):
 			#检测空格
 			elif event.key == K_SPACE:
 				print("space")
-				hero_tem.fire()
+				hero_tem.fire(enemy_tem)
 
 
 def main():
@@ -200,11 +297,11 @@ def main():
 		enemy.display()
 		#敌机移动
 		enemy.move_mode()
-		enemy.fire()
+		enemy.fire(hero)
 		#更新显示内容
 		pygame.display.update()
 		#键盘操作事件处理-移动开火
-		key_control(hero)
+		key_control(hero,enemy)
 		#优化一下性能，减少cpu负担
 		time.sleep(0.02)
 

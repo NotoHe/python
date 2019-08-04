@@ -83,6 +83,45 @@ class HeroPlane(BasePlane):
 	"""主角飞机"""
 	def __init__(self,screen_tem):
 		BasePlane.__init__(self,screen_tem,200,600,"./images/hero/hero.png")		
+		#被击中后使用的属性
+		self.hit = False  #是否被击中，默认False
+		self.image_num = 0  #图片显示计数
+		self.boom_image_list = [] #飞机爆炸图片的列表
+		self.image_index =0  #当前爆照图片的序号
+		self.crate_boom_image()
+
+	def crate_boom_image(self):
+		self.boom_image_list.append("./images/boom/boss_down1.png")
+		self.boom_image_list.append("./images/boom/boss_down2.png")
+		self.boom_image_list.append("./images/boom/boss_down4.png")
+		self.boom_image_list.append("./images/boom/boss_down6.png")
+
+	def display(self):
+		#显示飞机
+		if self.hit == True:
+			self.screen.blit(self.boom_list[self.image_index],(self.x,self.y))  #显示主角飞机
+			self.image_num +=1
+			if self.image_num >=7:
+				self.image_num =0
+				self.image_index +=1
+			if self.image_index >3:
+				exit()
+		else:
+			self.screen.blit(self.image,(self.x,self.y))  #显示主角飞机
+		
+		#删除越界子弹
+		if len(self.bullet_over_list) > 0: 
+			for over_bullet in self.bullet_over_list:  
+				self.bullet_list.remove(over_bullet)
+
+		self.bullet_over_list.clear()  #清空越界子弹列表
+		
+		for bullet in self.bullet_list:
+			bullet.display()  #显示子弹
+			#bullet.y -=10
+			bullet.move()  #子弹移动
+			if bullet.judge():  #判断子弹移动后是否越界
+				self.bullet_over_list.append(bullet)  #添加到子弹越界列表
 
 
 #敌机
